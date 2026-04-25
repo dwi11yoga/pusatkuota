@@ -2,64 +2,45 @@
 
 use Livewire\Component;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Computed;
+use App\Models\Product;
 
 new class extends Component {
     #[Layout('layouts/app')]
-    public $kuotas = [
-        [
-            'provider' => 'Axis',
-            'url' => '/kuota/axis',
-        ],
-        [
-            'provider' => 'Indosat',
-            'url' => '/kuota/indosat',
-        ],
-        [
-            'provider' => 'Smartfren',
-            'url' => '/kuota/smartfren',
-        ],
-        [
-            'provider' => 'Telkomsel',
-            'url' => '/kuota/telkomsel',
-        ],
-        [
-            'provider' => 'Tri',
-            'url' => '/kuota/tri',
-        ],
-        [
-            'provider' => 'XL',
-            'url' => '/kuota/xl',
-        ],
-        [
-            'provider' => 'By.U',
-            'url' => '/kuota/by.u',
-        ],
-    ];
+    #[Computed]
+    public function pulsaList()
+    {
+        return Product::distinct('provider')->where('type', 'Pulsa')->pluck('provider');
+    }
+
+    #[Computed]
+    public function kuotaList()
+    {
+        return Product::distinct('provider')->where('type', 'Kuota')->pluck('provider');
+    }
 };
 ?>
 
 <div class="space-y-5">
-    <livewire:header title="PUSAT KUOTA" :underline="false" />
+    <x-header title="PUSAT KUOTA" :underline="false" />
     {{-- pulsa --}}
     <div class="">
-        <livewire:menu-header title="Pulsa" />
+        <x-list-header title="Pulsa" />
         {{-- list --}}
         <div class="divide-y divide-dashed">
-            <livewire:menu text="Daftar harga pulsa" url="/" />
+            @foreach ($this->pulsaList as $pulsa)
+                <x-menu text="{{ $pulsa }}" url="/pulsa/{{ strtolower($pulsa) }}" />
+            @endforeach
         </div>
     </div>
     {{-- kuota --}}
     <div class="">
         {{-- judul --}}
-        <livewire:menu-header title="Kuota" />
+        <x-list-header title="Kuota" />
         {{-- list --}}
         <div class="divide-y divide-dashed">
-            @foreach ($kuotas as $kuota)
-                <livewire:menu :text="$kuota['provider']" :url="$kuota['url']" />
-                {{-- <a href="{{ $kuota['url'] }}" class="py-5 flex justify-between group">
-                    <div class="">{{ $kuota['provider'] }}</div>
-                    <div class="group-hover:block group-focus:block hidden">-></div>
-                </a> --}}
+            @foreach ($this->kuotaList as $kuota)
+                <x-menu :text="$kuota" url="/kuota/{{ strtolower($kuota) }}" />
             @endforeach
         </div>
     </div>

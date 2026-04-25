@@ -21,6 +21,7 @@ return new class extends Migration
             $table->bigInteger('expected_profit'); // misal: 2000, 3000, 5000 (sebelum dibulatkan ke ribuan)
             $table->bigInteger('real_profit'); // keuntungan disesuaikan dengan floor (base_price + profit = 5200 -> 5000)
             $table->string('url')->nullable();
+            $table->tinyInteger('available')->default(1);
             $table->datetimes();
             $table->softDeletes();
 

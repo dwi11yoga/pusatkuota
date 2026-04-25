@@ -3,6 +3,7 @@
 use Livewire\Component;
 use Livewire\Attributes\Validate;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use App\Models\Product;
 
 new class extends Component {
@@ -10,9 +11,13 @@ new class extends Component {
     public $inputCount = 1;
 
     // input global
+    #[Url]
     #[Validate('required')]
     public $type;
-    public $provider, $category;
+    #[Url]
+    public $provider;
+    #[Url]
+    public $category;
     #[Validate('nullable|url')]
     public $url;
 
@@ -221,14 +226,14 @@ new class extends Component {
         </div>
         {{-- tambah input + simpan --}}
         <div class="fixed bottom-5 right-5 flex justify-center text-base gap-2">
-            <div wire:click='inputIncrement'
-                class="flex gap-2 items-center rounded-full border-2 border-neutral-500 hover:bg-highlighter border-dashed px-5 py-3 cursor-pointer transition-all ease-in-out group">
+            <button type="button" wire:click='inputIncrement'
+                class="flex gap-2 items-center rounded-full border-2 bg-neutral-50 border-neutral-500 hover:bg-highlighter border-dashed px-5 py-3 cursor-pointer transition-all ease-in-out group">
                 <i data-lucide='plus' class="size-5"></i>
                 <div class="hidden group-hover:block">Tambah input</div>
-            </div>
+            </button>
             {{-- simpan --}}
             <button
-                class="flex gap-2 items-center rounded-full border-2 border-neutral-500 hover:bg-highlighter border-dashed px-5 py-3 cursor-pointer transition-all ease-in-out">
+                class="flex gap-2 items-center rounded-full border-2 bg-neutral-50 border-neutral-500 hover:bg-highlighter border-dashed px-5 py-3 cursor-pointer transition-all ease-in-out">
                 @if ($saved === true)
                     <i wire:loading.remove wire:target='save' data-lucide='check' class="size-5"></i>
                     <div wire:loading.remove wire:target='save' class="">Data berhasil disimpan</div>

@@ -1,27 +1,23 @@
 <?php
 
 use Livewire\Component;
-use Livewire\Attributes\Validate;
-use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
+use Livewire\Attributes\Computed;
+use Livewire\Attributes\Validate;
 use App\Models\Product;
 
 new class extends Component {
-    // jumlah input
-    public $inputCount = 1;
-
-    // input global
     #[Url]
+    public $products; // id produk yang diedit
+
+    // dapatkan data product
     #[Validate('required')]
     public $type;
-    #[Url]
     public $provider;
-    #[Url]
     public $category;
     #[Validate('nullable|url')]
     public $url;
 
-    //input produk
     #[Validate(['names' => 'array', 'names.*' => 'required'])]
     public array $names = [];
     #[Validate(['costs' => 'array', 'costs.*' => 'required|integer|min:1'])]
@@ -31,20 +27,36 @@ new class extends Component {
     #[Validate(['prices' => 'array', 'prices.*' => 'required|integer|min:0'])]
     public array $prices = [];
 
-    // inisialisasi nilai pada array agar tidak kosong
-    public function fillArrayData()
-    {
-        // jika inputCount bertambah, tambah index baru
-        for ($i = 1; $i <= $this->inputCount; $i++) {
-            $this->names[$i] = $this->names[$i] ?? '';
-            $this->costs[$i] = $this->costs[$i] ?? '';
-            $this->profits[$i] = $this->profits[$i] ?? 2000;
-            $this->prices[$i] = $this->prices[$i] ?? 0;
-        }
-    }
+    // opsi
+    public $typeOptions, $providerOptions, $categoryOptions;
     public function mount()
     {
-        $this->fillArrayData();
+        $products = Product::whereIn('id', $this->products)->get();
+        // set ke variabel
+        $i = 1;
+        foreach ($products as $product) {
+            $this->names[$i] = $product->name;
+            $this->costs[$i] = $product->base_price;
+            $this->profits[$i] = $product->expected_profit;
+            $this->prices[$i] = $product->base_price + $product->real_profit;
+            $i++;
+        }
+        $types = $products->unique('type')->pluck('type');
+        $this->type = count($types) == 1 ? $types->first() : null;
+
+        $providers = $products->unique('provider')->pluck('provider');
+        $this->provider = count($providers) == 1 ? $providers->first() : null;
+
+        $categories = $products->unique('category')->pluck('category');
+        $this->category = count($categories) == 1 ? $categories->first() : null;
+
+        $urls = $products->unique('url')->pluck('url');
+        $this->url = count($urls) == 1 ? $urls->first() : null;
+
+        // ambil opsi tipe, kategori, dan provider
+        $this->typeOptions = Product::distinct()->pluck('type');
+        $this->providerOptions = Product::distinct()->pluck('provider');
+        $this->categoryOptions = Product::distinct()->pluck('category');
     }
 
     // jalankan validasi nama saat ada perubahan pada input
@@ -62,6 +74,7 @@ new class extends Component {
     }
 
     // hitung berapa harga jual
+    // #[Computed]
     public function calculatePrice($key)
     {
         $cost = (int) ($this->costs[$key] ?? 0);
@@ -72,64 +85,41 @@ new class extends Component {
         $this->prices[$key] = $price;
     }
 
-    // incerment jumlah input
-    function inputIncrement()
-    {
-        $this->inputCount += 1;
-        $this->fillArrayData();
-    }
-
-    // dapatkan opsi tipe
-    #[Computed]
-    public function typeOptions()
-    {
-        return Product::distinct()->pluck('type');
-    }
-    // dapatkan opsi provider
-    #[Computed]
-    public function providerOptions()
-    {
-        return Product::distinct()->pluck('provider');
-    }
-    // dapatkan opsi kategori
-    #[Computed]
-    public function categoryOptions()
-    {
-        $data = Product::distinct();
-        if ($this->provider) {
-            $data = $data->where('provider', $this->provider);
-        }
-        $data = $data->pluck('category');
-        return $data;
-    }
-
-    // fungsi simpan data
+    // funsi simpan
     public $saved;
     public function save()
     {
-        sleep(2);
         try {
             $this->validate();
 
-            // simpan nilai input kedalam satu array
+            // set data yang akan disimpan
             $data = [];
-            foreach ($this->names as $key => $value) {
-                $data[$key] = [
-                    'type' => $this->type,
-                    'provider' => $this->provider,
-                    'category' => $this->category,
-                    'name' => $value,
+            foreach ($this->names as $key => $name) {
+                $id = $this->products[$key - 1];
+                $data[$id] = [
+                    'name' => $name,
                     'base_price' => $this->costs[$key],
                     'expected_profit' => $this->profits[$key],
                     'real_profit' => $this->prices[$key] - $this->costs[$key],
-                    'url' => $this->url,
-                    'created_at' => now(),
-                    'updated_at' => now(),
                 ];
+                if (!empty($this->type)) {
+                    $data[$id]['type'] = $this->type;
+                }
+                if (!empty($this->provider)) {
+                    $data[$id]['provider'] = $this->provider;
+                }
+                if (!empty($this->category)) {
+                    $data[$id]['category'] = $this->category;
+                }
+                if (!empty($this->url)) {
+                    $data[$id]['url'] = $this->url;
+                }
             }
             // dd($data);
+            foreach ($data as $key => $d) {
+                Product::find($key)->update($d);
+            }
             $this->saved = true;
-            Product::insert($data);
         } catch (\Illuminate\Validation\ValidationException $err) {
             $this->saved = false;
             throw $err;
@@ -141,17 +131,15 @@ new class extends Component {
 };
 ?>
 
-<div class="space-y-5">
-    <x-header title="produk baru" />
-    {{-- body (input) --}}
-    <form wire:submit='save' class="space-y-5">
+<div>
+    <x-header title="Edit Produk" />
+    <form wire:submit='save'>
         <div class="text-base divide-y divide-dashed">
             {{-- tipe --}}
             <div class="py-2">
-                <x-input id="type" model="type" type="text" label="Tipe" dataset="type-list"
-                    :error="$errors->first('type')" />
+                <x-input id="type" model="type" type="text" label="Tipe" dataset="type-list" :error="$errors->first('type')" />
                 <datalist id="type-list">
-                    @foreach ($this->typeOptions as $option)
+                    @foreach ($typeOptions as $option)
                         <option>{{ $option }}</option>
                     @endforeach
                 </datalist>
@@ -163,7 +151,7 @@ new class extends Component {
                 <x-input id="provider" model="provider" type="text" label="Provider" dataset="provider-list"
                     :error="$errors->first('provider')" />
                 <datalist id="provider-list">
-                    @foreach ($this->providerOptions as $option)
+                    @foreach ($providerOptions as $option)
                         <option>{{ $option }}</option>
                     @endforeach
                 </datalist>
@@ -173,7 +161,7 @@ new class extends Component {
                 <x-input id="category" model="category" type="text" label="Kategori" dataset="category-list"
                     :error="$errors->first('category')" />
                 <datalist id="category-list">
-                    @foreach ($this->categoryOptions as $option)
+                    @foreach ($categoryOptions as $option)
                         <option>{{ $option }}</option>
                     @endforeach
                 </datalist>
@@ -194,7 +182,7 @@ new class extends Component {
             </div>
             {{-- input produk --}}
             <div class="divide-y divide-dashed">
-                @for ($i = 1; $i <= $inputCount; $i++)
+                @for ($i = 1; $i <= count($products); $i++)
                     <div wire:key='row-{{ $i }}' class="grid grid-cols-12 gap-2 text-base pt-4 pb-1">
                         <div class="">{{ $i }}</div>
                         <div class="col-span-5">
@@ -224,14 +212,8 @@ new class extends Component {
                 @endfor
             </div>
         </div>
-        {{-- tambah input + simpan --}}
+        {{-- simpan --}}
         <div class="fixed bottom-5 right-5 flex justify-center text-base gap-2">
-            <button type="button" wire:click='inputIncrement'
-                class="flex gap-2 items-center rounded-full border-2 bg-neutral-50 border-neutral-500 hover:bg-highlighter border-dashed px-5 py-3 cursor-pointer transition-all ease-in-out group">
-                <i data-lucide='plus' class="size-5"></i>
-                <div class="hidden group-hover:block">Tambah input</div>
-            </button>
-            {{-- simpan --}}
             <button
                 class="flex gap-2 items-center rounded-full border-2 bg-neutral-50 border-neutral-500 hover:bg-highlighter border-dashed px-5 py-3 cursor-pointer transition-all ease-in-out">
                 @if ($saved === true)

@@ -1,4 +1,4 @@
-@props(['title', 'underline'])
+@props(['title', 'underline' => true])
 
 <div class="">
     <div class="p-12 text-6xl font-bold italic text-center uppercase">{{ $title }}</div>

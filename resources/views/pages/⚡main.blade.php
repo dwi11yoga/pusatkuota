@@ -18,6 +18,14 @@ new class extends Component {
     {
         return Product::distinct('provider')->where('type', 'Kuota')->pluck('provider');
     }
+
+    // fungsi logout
+    public function logout()
+    {
+        Auth::logout();
+        session()->regenerate();
+        return redirect()->to('/')->with('success', 'Anda berhasil logout');
+    }
 };
 ?>
 
@@ -47,10 +55,30 @@ new class extends Component {
     {{-- Admin corner --}}
     <div class="">
         {{-- judul --}}
-        <livewire:menu-header title="Admin corner" />
+        <x-list-header title="Admin corner" />
         {{-- list --}}
         <div class="divide-y divide-dashed">
-            <livewire:menu text="Tambah produk" url="/new" />
+            <x-menu text="Tambah produk" url="/new" />
+            @auth
+                {{-- logout --}}
+                <button wire:click='logout' class="w-full" id="logout">
+                    <x-menu text="Keluar sebagai admin" url="#logout" />
+                </button>
+            @else
+                {{-- login --}}
+                <x-menu text="Masuk sebagai admin" url="/auth" />
+            @endauth
         </div>
     </div>
+
+    {{-- tampilkan info session --}}
+    @session('success')
+        <div id="sessionSuccess" class="fixed bottom-0 right-5 bg-highlighter p-3 rounded-l-2xl rounded-t-2xl">
+            {{ session('success') }}
+        </div>
+        {{-- hilangkan pesan sukses setelah 3 detik --}}
+        <script>
+            setTimeout(() => document.getElementById('sessionSuccess').remove(), 3000);
+        </script>
+    @endsession
 </div>

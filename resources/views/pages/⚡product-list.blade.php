@@ -14,7 +14,7 @@ new class extends Component {
 
     // filter
     #[Url]
-    public $sort = 'Murah-mahal';
+    public $sort = 'Termurah';
     #[Url]
     #[Validate('nullable')]
     public $search;
@@ -86,13 +86,13 @@ new class extends Component {
             $data = $data->orderBy('name');
         } elseif ($this->sort == 'Z-A') {
             $data = $data->orderByDesc('name');
-        } elseif ($this->sort == 'Murah-mahal') {
+        } elseif ($this->sort == 'Termurah') {
             $data = $data->orderByRaw('(base_price + real_profit) ASC');
-        } elseif ($this->sort == 'Mahal-murah') {
+        } elseif ($this->sort == 'Termahal') {
             $data = $data->orderByRaw('(base_price + real_profit) DESC');
-        } elseif ($this->sort == 'Terlama-terbaru') {
+        } elseif ($this->sort == 'Terlama') {
             $data = $data->orderBy('updated_at');
-        } elseif ($this->sort == 'Terbaru-terlama') {
+        } elseif ($this->sort == 'Terbaru') {
             $data = $data->orderByDesc('updated_at');
         }
         // jika ada limit, maka poaginate
@@ -102,7 +102,6 @@ new class extends Component {
         } else {
             $data = $data->get();
         }
-        // $this->products = $data;
         return $data;
     }
 
@@ -110,12 +109,14 @@ new class extends Component {
     public function resetFilter()
     {
         // kembalikan ke nilai default
-        $this->sort = 'Murah-mahal';
+        $this->adminView = false;
+        $this->sort = 'Termurah';
         $this->search = null;
         $this->category = null;
         $this->minPrice = null;
         $this->maxPrice = null;
         $this->limit = null;
+        $this->status = 'all';
 
         // ambil kembali produk
         $this->products();
@@ -169,6 +170,10 @@ new class extends Component {
         Product::whereIn('id', $this->selected)->delete();
         $this->selected = [];
     }
+
+    // mode tampilan
+    #[Url]
+    public $adminView = false;
 };
 ?>
 
@@ -180,11 +185,27 @@ new class extends Component {
             <x-list-item text="Belum ada produk." />
         @else
             @foreach ($this->products as $product)
-                <x-list-item wire:key='{{ $product->id }}' id="{{ $product->id }}" text="{{ $product->name }}"
-                    textRight="{{ $product->available == 1 ? money_format($product->base_price + $product->real_profit) : 'Tidak tersedia' }}"
-                    :onSelect="$onSelect" checkboxModel="selected" />
+                <div class="relative">
+                    @php
+                        $sellingPrice = money_format($product->base_price + $product->real_profit);
+                        $priceDetail =
+                            '(' .
+                            money_format($product->base_price) .
+                            '+' .
+                            money_format($product->expected_profit) .
+                            ')';
+                        $textRight =
+                            $product->available == 1
+                                ? ($adminView
+                                    ? $sellingPrice . '<br>' . $priceDetail
+                                    : $sellingPrice)
+                                : 'Tidak tersedia';
+                    @endphp
+                    <x-list-item wire:key='{{ $product->id }}' id="{{ $product->id }}" text="{{ $product->name }}"
+                        :textRight="$textRight" :onSelect="$onSelect" checkboxModel="selected" />
+                </div>
             @endforeach
-            <div class="text-sm py-3">Silahkan bisa langsung hubungi admin ya gaes 🤙.</div>
+            <div class="text-sm py-3">Pembelian/paket internet lainnya bisa langsung hubungi admin 🤙.</div>
         @endif
     </div>
 
@@ -193,61 +214,34 @@ new class extends Component {
         {{-- filter --}}
         @if ($onSelect != true)
             @if ($filterOpen)
-                <div id="filter" class="border-2 border-dashed p-4 rounded-xl space-y-4 bg-neutral-50">
-                    {{-- sort --}}
-                    <div class="">
-                        <div class="font-bold">Sort</div>
-                        <div class="divide-y divide-dashed">
-                            <div class="py-1 flex items-center justify-between">
-                                <div class="">Nama</div>
-                                <div class="-space-x-2 flex gap-1">
-                                    <label for="A-Z" title="A-Z"
-                                        class="p-1 hover:bg-neutral-200 rounded-sm {{ $sort == 'A-Z' ? 'bg-highlighter' : '' }}">
-                                        <i data-lucide='arrow-down-a-z' class="size-5"></i>
-                                        <input wire:model.live='sort' type="radio" id="A-Z" value="A-Z"
-                                            class="hidden">
-                                    </label>
-                                    <label for="Z-A" title="Z-A"
-                                        class="p-1 hover:bg-neutral-200 rounded-sm {{ $sort == 'Z-A' ? 'bg-highlighter' : '' }}">
-                                        <i data-lucide='arrow-down-z-a' class="size-5"></i>
-                                        <input wire:model.live='sort' type="radio" id="Z-A" value="Z-A"
-                                            class="hidden">
-                                    </label>
-                                </div>
+                <div id="filter" class="border-2 border-dashed p-4 rounded-xl space-y-2 bg-neutral-50">
+                    <div class="space-y-4 max-h-96 overflow-auto">
+                        {{-- Mode tampilan --}}
+                        <div class="">
+                            <div class="font-bold">Mode tampilan</div>
+                            <div class="">
+                                <x-radio id="adminView-true" model="adminView" value="1" icon="user-lock"
+                                    text="Pengurus" />
+                                <x-radio id="adminView-false" model="adminView" value="0" icon="user"
+                                    text="Pembeli" />
                             </div>
-                            <div class="py-1 flex items-center justify-between">
-                                <div class="">Harga</div>
-                                <div class="-space-x-2 flex gap-1">
-                                    <label for="Murah-mahal" title="Murah-mahal"
-                                        class="p-1 hover:bg-neutral-200 rounded-sm {{ $sort == 'Murah-mahal' ? 'bg-highlighter' : '' }}">
-                                        <i data-lucide='arrow-down-0-1' class="size-5"></i>
-                                        <input wire:model.live='sort' type="radio" id="Murah-mahal"
-                                            value="Murah-mahal" class="hidden">
-                                    </label>
-                                    <label for="Mahal-murah" title="Mahal-murah"
-                                        class="p-1 hover:bg-neutral-200 rounded-sm {{ $sort == 'Mahal-murah' ? 'bg-highlighter' : '' }}">
-                                        <i data-lucide='arrow-down-1-0' class="size-5"></i>
-                                        <input wire:model.live='sort' type="radio" id="Mahal-murah"
-                                            value="Mahal-murah" class="hidden">
-                                    </label>
-                                </div>
-                            </div>
-                            <div class="py-1 flex items-center justify-between">
-                                <div class="">Ditambahkan</div>
-                                <div class="-space-x-2 flex gap-1">
-                                    <label for="Terlama-terbaru" title="Terlama-terbaru"
-                                        class="p-1 hover:bg-neutral-200 rounded-sm {{ $sort == 'Terlama-terbaru' ? 'bg-highlighter' : '' }}">
-                                        <i data-lucide='calendar-arrow-down' class="size-5"></i>
-                                        <input wire:model.live='sort' type="radio" id="Terlama-terbaru"
-                                            value="Terlama-terbaru" class="hidden">
-                                    </label>
-                                    <label for="Terbaru-terlama" title="Terbaru-terlama"
-                                        class="p-1 hover:bg-neutral-200 rounded-sm {{ $sort == 'Terbaru-terlama' ? 'bg-highlighter' : '' }}">
-                                        <i data-lucide='calendar-arrow-up' class="size-5"></i>
-                                        <input wire:model.live='sort' type="radio" id="Terbaru-terlama"
-                                            value="Terbaru-terlama" class="hidden">
-                                    </label>
-                                </div>
+                        </div>
+                        {{-- sort --}}
+                        <div class="">
+                            <div class="font-bold">Sort</div>
+                            <div class="">
+                                <x-radio id="A-Z" model="sort" value="A-Z" icon="arrow-down-a-z"
+                                    text="A-Z" />
+                                <x-radio id="Z-A" model="sort" value="Z-A" icon="arrow-down-z-a"
+                                    text="Z-A" />
+                                <x-radio id="Termurah" model="sort" value="Termurah" icon="arrow-down-0-1"
+                                    text="Termurah" />
+                                <x-radio id="Termahal" model="sort" value="Termahal" icon="arrow-down-1-0"
+                                    text="Termahal" />
+                                <x-radio id="Terlama" model="sort" value="Terlama" icon="calendar-arrow-down"
+                                    text="Terlama" />
+                                <x-radio id="Terbaru" model="sort" value="Terbaru" icon="calendar-arrow-up"
+                                    text="Terbaru" />
                             </div>
                         </div>
                         {{-- filter --}}
@@ -277,11 +271,9 @@ new class extends Component {
                                 <div class="py-1">
                                     <div class="flex gap-2">
                                         <label for="minPrice">Harga</label>
-                                        <x-input id="minPrice" model="minPrice" type="number"
-                                            placeholder="Min..." />
+                                        <x-input id="minPrice" model="minPrice" type="number" placeholder="Min..." />
                                         <div class="">-</div>
-                                        <x-input id="maxPrice" model="maxPrice" type="number"
-                                            placeholder="Max..." />
+                                        <x-input id="maxPrice" model="maxPrice" type="number" placeholder="Max..." />
                                     </div>
                                     @error('price')
                                         <div class="text-xs text-red-500">{{ $message }}</div>
@@ -291,27 +283,12 @@ new class extends Component {
                                 <div class="py-1">
                                     <div class="gap-2">
                                         <div>Status</div>
-                                        <label for="statusAll"
-                                            class="inline-flex items-center gap-1 text-neutral-700 hover:text-black p-1 rounded-md {{ $status == 'all' ? 'bg-highlighter' : '' }} hover:bg-neutral-200">
-                                            <input type="radio" wire:model.live='status' id="statusAll"
-                                                value="all" hidden>
-                                            <i data-lucide='layers' class="size-5"></i>
-                                            <span>Semua</span>
-                                        </label>
-                                        <label for="statusAvailable"
-                                            class="inline-flex items-center gap-1 text-neutral-700 hover:text-black p-1 rounded-md {{ $status == 'available' ? 'bg-highlighter' : '' }} hover:bg-neutral-200">
-                                            <input type="radio" wire:model.live='status' id="statusAvailable"
-                                                value="available" hidden>
-                                            <i data-lucide='circle-check' class="size-5"></i>
-                                            <span>Tersedia</span>
-                                        </label>
-                                        <label for="statusUnavailable"
-                                            class="inline-flex items-center gap-1 text-neutral-700 hover:text-black p-1 rounded-md {{ $status == 'unavailable' ? 'bg-highlighter' : '' }} hover:bg-neutral-200">
-                                            <input type="radio" wire:model.live='status' id="statusUnavailable"
-                                                value="unavailable" hidden>
-                                            <i data-lucide='circle-x' class="size-5"></i>
-                                            <span>Tidak tersedia</span>
-                                        </label>
+                                        <x-radio id="statusAll" model="status" icon="layers" text="Semua"
+                                            value="all" />
+                                        <x-radio id="statusAvailable" model="status" icon="circle-check"
+                                            text="Tersedia" value="available" />
+                                        <x-radio id="statusUnavailable" model="status" icon="circle-x"
+                                            text="Tidak tersedia" value="unavailable" />
                                     </div>
                                     @error('status')
                                         <div class="text-xs text-red-500">{{ $message }}</div>
@@ -387,14 +364,15 @@ new class extends Component {
                         </div>
                     </div>
 
-                    {{-- jumlah dipilih --}}
+                    {{-- aksi --}}
                     <div class="py-2 space-y-2">
                         <div class="font-bold">Aksi</div>
                         <div class="">
-                            <button class="p-1 inline-flex hover:bg-highlighter rounded-md items-center gap-1">
+                            <a href="/edit?{{ http_build_query(['products' => $selected]) }}"
+                                class="p-1 inline-flex hover:bg-highlighter rounded-md items-center gap-1">
                                 <i data-lucide='Pencil' class="size-5"></i>
                                 <span class="">Edit</span>
-                            </button>
+                            </a>
                             <button wire:click='deleteSelected'
                                 class="p-1 inline-flex hover:bg-highlighter rounded-md items-center gap-1">
                                 <i data-lucide='trash' class="size-5"></i>
@@ -437,23 +415,6 @@ new class extends Component {
                     <i data-lucide='square-check' class="size-5"></i>
                 @endif
             </button>
-        @endif
-        @if ($onSelect)
-            {{-- <div
-                class="bg-neutral-50 hover:rounded-4xl border-2 border-dashed border-neutral-800 {{ count($selected) < 10 ? 'px-5 py-4' : 'p-4' }} rounded-xl flex items-center gap-2 group transition-all ease-in-out w-fit">
-                <div class="group-hover:block hidden">Dipilih:</div>
-                <div class="">{{ count($selected) }}</div>
-            </div>
-            <button
-                class="hover:bg-highlighter bg-neutral-50 hover:rounded-4xl border-2 border-dashed border-neutral-800 p-4 rounded-xl flex items-center gap-2 group transition-all ease-in-out w-fit">
-                <div class="group-hover:block hidden">Tidak tersedia</div>
-                <i data-lucide='eye-off' class="size-5"></i>
-            </button>
-            <button
-                class="hover:bg-highlighter bg-neutral-50 hover:rounded-4xl border-2 border-dashed border-neutral-800 p-4 rounded-xl flex items-center gap-2 group transition-all ease-in-out w-fit">
-                <div class="group-hover:block hidden">Hapus</div>
-                <i data-lucide='trash' class="size-5"></i>
-            </button> --}}
         @endif
         {{-- tambah --}}
         @if ($onSelect !== true)

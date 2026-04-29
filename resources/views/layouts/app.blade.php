@@ -53,7 +53,10 @@
 
 <body class="flex justify-center my-5">
     <div class="space-y-5 lg:w-2/5 w-[80%]">
-        <div class="">{{ $slot }}</div>
+        <div class="">
+            {{ $slot ?? '' }}
+            @yield('slot')
+        </div>
     </div>
 
     @livewireScripts

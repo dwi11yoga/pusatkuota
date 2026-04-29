@@ -31,6 +31,10 @@ new class extends Component {
     public $typeOptions, $providerOptions, $categoryOptions;
     public function mount()
     {
+        // jika products kosong, jangan jalankan
+        if (empty($this->products)) {
+            return;
+        }
         $products = Product::whereIn('id', $this->products)->get();
         // set ke variabel
         $i = 1;
@@ -132,105 +136,111 @@ new class extends Component {
 ?>
 
 <div>
-    <x-header title="Edit Produk" />
-    <form wire:submit='save'>
-        <div class="text-base divide-y divide-dashed">
-            {{-- tipe --}}
-            <div class="py-2">
-                <x-input id="type" model="type" type="text" label="Tipe" dataset="type-list" :error="$errors->first('type')" />
-                <datalist id="type-list">
-                    @foreach ($typeOptions as $option)
-                        <option>{{ $option }}</option>
-                    @endforeach
-                </datalist>
-            </div>
-            {{-- provider --}}
-            <div class="py-2">
-                {{-- <livewire:input id="provider" model="provider" type="text" label="Provider" dataset="provider-list"
-                    :error="$errors->first('provider')" /> --}}
-                <x-input id="provider" model="provider" type="text" label="Provider" dataset="provider-list"
-                    :error="$errors->first('provider')" />
-                <datalist id="provider-list">
-                    @foreach ($providerOptions as $option)
-                        <option>{{ $option }}</option>
-                    @endforeach
-                </datalist>
-            </div>
-            {{-- kategori --}}
-            <div class="py-2">
-                <x-input id="category" model="category" type="text" label="Kategori" dataset="category-list"
-                    :error="$errors->first('category')" />
-                <datalist id="category-list">
-                    @foreach ($categoryOptions as $option)
-                        <option>{{ $option }}</option>
-                    @endforeach
-                </datalist>
-            </div>
-            {{-- Url --}}
-            <div class="py-2">
-                <x-input id="url" model="url" type="text" label="Tautan produk" :error="$errors->first('url')" />
-            </div>
-        </div>
-        <div class="">
-            {{-- head --}}
-            <div class="grid grid-cols-12 gap-2 text-base font-bold">
-                <div class="">#</div>
-                <div class="col-span-5">Nama</div>
-                <div class="col-span-2">Modal</div>
-                <div class="col-span-2">Profit</div>
-                <div class="col-span-2">Harga</div>
-            </div>
-            {{-- input produk --}}
-            <div class="divide-y divide-dashed">
-                @for ($i = 1; $i <= count($products); $i++)
-                    <div wire:key='row-{{ $i }}' class="grid grid-cols-12 gap-2 text-base pt-4 pb-1">
-                        <div class="">{{ $i }}</div>
-                        <div class="col-span-5">
-                            <textarea wire:model.live.blur='names.{{ $i }}' placeholder="Ketik..."
-                                oninput="this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px'"
-                                class="{{ empty($names[$i]) ? 'h-6.5' : '' }}"></textarea>
-                            @error('names.' . $i)
-                                <div class="text-red-500 text-xs">{{ $message }}</div>
-                            @enderror
-
-                        </div>
-                        <label for="costs{{ $i }}" class="col-span-2">
-                            <x-input wire:key='costs{{ $i }}' id="costs{{ $i }}"
-                                calculatePriceMethod="calculatePrice({{ $i }})"
-                                model="costs.{{ $i }}" type="number" :error="$errors->first('costs.' . $i)" />
-                        </label>
-                        <label for="profits{{ $i }}" class="col-span-2">
-                            <x-input wire:key='profits{{ $i }}' id="profits{{ $i }}"
-                                calculatePriceMethod="calculatePrice({{ $i }})"
-                                model="profits.{{ $i }}" type="number" :error="$errors->first('profits.' . $i)" />
-                        </label>
-                        <label for="prices{{ $i }}" class="col-span-2">
-                            <x-input wire:key='prices{{ $i }}' id="prices{{ $i }}"
-                                model="prices.{{ $i }}" type="number" :error="$errors->first('prices.' . $i)" readonly="true" />
-                        </label>
-                    </div>
-                @endfor
-            </div>
-        </div>
-        {{-- simpan --}}
-        <div class="fixed bottom-5 right-5 flex justify-center text-base gap-2">
-            <button
-                class="flex gap-2 items-center rounded-full border-2 bg-neutral-50 border-neutral-500 hover:bg-highlighter border-dashed px-5 py-3 cursor-pointer transition-all ease-in-out">
-                @if ($saved === true)
-                    <i wire:loading.remove wire:target='save' data-lucide='check' class="size-5"></i>
-                    <div wire:loading.remove wire:target='save' class="">Data berhasil disimpan</div>
-                @elseif ($saved === false)
-                    <i wire:loading.remove wire:target='save' data-lucide='x' class="size-5"></i>
-                    <div wire:loading.remove wire:target='save' class="">Gagal menyimpan data, coba lagi</div>
-                @else
-                    <i wire:loading.remove wire:target='save' data-lucide='save' class="size-5"></i>
-                    <div wire:loading.remove wire:target='save' class="">Simpan</div>
-                @endif
-                <div wire:loading wire:target='save' class="animate-spin">
-                    <i data-lucide='loader' class="size-5"></i>
+    @if (empty($products))
+        <x-error-page code="400" title="No Products Selected" message="Please select at least one product to edit." />
+    @else
+        <x-header title="Edit Produk" />
+        <form wire:submit='save'>
+            <div class="text-base divide-y divide-dashed">
+                {{-- tipe --}}
+                <div class="py-2">
+                    <x-input id="type" model="type" type="text" label="Tipe" dataset="type-list"
+                        :error="$errors->first('type')" />
+                    <datalist id="type-list">
+                        @foreach ($typeOptions as $option)
+                            <option>{{ $option }}</option>
+                        @endforeach
+                    </datalist>
                 </div>
-                <div wire:loading wire:target='save' class="">Menyimpan...</div>
-            </button>
-        </div>
-    </form>
+                {{-- provider --}}
+                <div class="py-2">
+                    {{-- <livewire:input id="provider" model="provider" type="text" label="Provider" dataset="provider-list"
+                        :error="$errors->first('provider')" /> --}}
+                    <x-input id="provider" model="provider" type="text" label="Provider" dataset="provider-list"
+                        :error="$errors->first('provider')" />
+                    <datalist id="provider-list">
+                        @foreach ($providerOptions as $option)
+                            <option>{{ $option }}</option>
+                        @endforeach
+                    </datalist>
+                </div>
+                {{-- kategori --}}
+                <div class="py-2">
+                    <x-input id="category" model="category" type="text" label="Kategori" dataset="category-list"
+                        :error="$errors->first('category')" />
+                    <datalist id="category-list">
+                        @foreach ($categoryOptions as $option)
+                            <option>{{ $option }}</option>
+                        @endforeach
+                    </datalist>
+                </div>
+                {{-- Url --}}
+                <div class="py-2">
+                    <x-input id="url" model="url" type="text" label="Tautan produk" :error="$errors->first('url')" />
+                </div>
+            </div>
+            <div class="">
+                {{-- head --}}
+                <div class="grid grid-cols-12 gap-2 text-base font-bold">
+                    <div class="">#</div>
+                    <div class="col-span-5">Nama</div>
+                    <div class="col-span-2">Modal</div>
+                    <div class="col-span-2">Profit</div>
+                    <div class="col-span-2">Harga</div>
+                </div>
+                {{-- input produk --}}
+                <div class="divide-y divide-dashed">
+                    @for ($i = 1; $i <= count($products); $i++)
+                        <div wire:key='row-{{ $i }}' class="grid grid-cols-12 gap-2 text-base pt-4 pb-1">
+                            <div class="">{{ $i }}</div>
+                            <div class="col-span-5">
+                                <textarea wire:model.live.blur='names.{{ $i }}' placeholder="Ketik..."
+                                    oninput="this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px'"
+                                    class="{{ empty($names[$i]) ? 'h-6.5' : '' }}"></textarea>
+                                @error('names.' . $i)
+                                    <div class="text-red-500 text-xs">{{ $message }}</div>
+                                @enderror
+
+                            </div>
+                            <label for="costs{{ $i }}" class="col-span-2">
+                                <x-input wire:key='costs{{ $i }}' id="costs{{ $i }}"
+                                    calculatePriceMethod="calculatePrice({{ $i }})"
+                                    model="costs.{{ $i }}" type="number" :error="$errors->first('costs.' . $i)" />
+                            </label>
+                            <label for="profits{{ $i }}" class="col-span-2">
+                                <x-input wire:key='profits{{ $i }}' id="profits{{ $i }}"
+                                    calculatePriceMethod="calculatePrice({{ $i }})"
+                                    model="profits.{{ $i }}" type="number" :error="$errors->first('profits.' . $i)" />
+                            </label>
+                            <label for="prices{{ $i }}" class="col-span-2">
+                                <x-input wire:key='prices{{ $i }}' id="prices{{ $i }}"
+                                    model="prices.{{ $i }}" type="number" :error="$errors->first('prices.' . $i)"
+                                    readonly="true" />
+                            </label>
+                        </div>
+                    @endfor
+                </div>
+            </div>
+            {{-- simpan --}}
+            <div class="fixed bottom-5 right-5 flex justify-center text-base gap-2">
+                <button
+                    class="flex gap-2 items-center rounded-full border-2 bg-neutral-50 border-neutral-500 hover:bg-highlighter border-dashed px-5 py-3 cursor-pointer transition-all ease-in-out">
+                    @if ($saved === true)
+                        <i wire:loading.remove wire:target='save' data-lucide='check' class="size-5"></i>
+                        <div wire:loading.remove wire:target='save' class="">Data berhasil disimpan</div>
+                    @elseif ($saved === false)
+                        <i wire:loading.remove wire:target='save' data-lucide='x' class="size-5"></i>
+                        <div wire:loading.remove wire:target='save' class="">Gagal menyimpan data, coba lagi</div>
+                    @else
+                        <i wire:loading.remove wire:target='save' data-lucide='save' class="size-5"></i>
+                        <div wire:loading.remove wire:target='save' class="">Simpan</div>
+                    @endif
+                    <div wire:loading wire:target='save' class="animate-spin">
+                        <i data-lucide='loader' class="size-5"></i>
+                    </div>
+                    <div wire:loading wire:target='save' class="">Menyimpan...</div>
+                </button>
+            </div>
+        </form>
+    @endif
 </div>

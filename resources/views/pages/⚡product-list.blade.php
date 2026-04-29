@@ -33,6 +33,15 @@ new class extends Component {
     #[Url]
     #[Validate('in:all,available,unavailable')]
     public $status = 'all';
+    // mode tampilan
+    #[Url]
+    public $adminView = false;
+    public function mount()
+    {
+        if (auth()->user()) {
+            $this->adminView = true;
+        }
+    }
 
     #[Computed]
     public function categoryOptions()
@@ -170,10 +179,6 @@ new class extends Component {
         Product::whereIn('id', $this->selected)->delete();
         $this->selected = [];
     }
-
-    // mode tampilan
-    #[Url]
-    public $adminView = false;
 };
 ?>
 
@@ -217,15 +222,17 @@ new class extends Component {
                 <div id="filter" class="border-2 border-dashed p-4 rounded-xl space-y-2 bg-neutral-50">
                     <div class="space-y-4 max-h-96 overflow-auto">
                         {{-- Mode tampilan --}}
-                        <div class="">
-                            <div class="font-bold">Mode tampilan</div>
+                        @auth
                             <div class="">
-                                <x-radio id="adminView-true" model="adminView" value="1" icon="user-lock"
-                                    text="Pengurus" />
-                                <x-radio id="adminView-false" model="adminView" value="0" icon="user"
-                                    text="Pembeli" />
+                                <div class="font-bold">Mode tampilan</div>
+                                <div class="">
+                                    <x-radio id="adminView-true" model="adminView" value="1" icon="user-lock"
+                                        text="Pengurus" />
+                                    <x-radio id="adminView-false" model="adminView" value="0" icon="user"
+                                        text="Pembeli" />
+                                </div>
                             </div>
-                        </div>
+                        @endauth
                         {{-- sort --}}
                         <div class="">
                             <div class="font-bold">Sort</div>
@@ -339,85 +346,87 @@ new class extends Component {
             @endif
         @endif
         {{-- tombol pilih --}}
-        @if ($onSelect)
-            <div id="filter" class="border-2 border-dashed p-4 rounded-xl space-y-4 bg-neutral-50">
-                <div class="divide-y divide-dashed">
-                    {{-- menu pilih --}}
-                    <div class="py-2 space-y-2">
-                        <div class="font-bold">Pilih</div>
-                        <div class="">
-                            <button wire:click='selectAll'
-                                class="p-1 hover:bg-highlighter rounded-md inline-flex items-center gap-1">
-                                <i data-lucide='check-check' class="size-5"></i>
-                                <span class="">Semua</span>
-                            </button>
-                            <button wire:click="unselect"
-                                class="p-1 hover:bg-highlighter rounded-md inline-flex items-center gap-1">
-                                <i data-lucide='square-dashed' class="size-5"></i>
-                                <span class="">Batalkan</span>
-                            </button>
-                            <button wire:click="selectInverse"
-                                class="p-1 hover:bg-highlighter rounded-md inline-flex items-center gap-1">
-                                <i data-lucide='refresh-ccw' class="size-5"></i>
-                                <span class="text-nowrap">Balik pilihan</span>
-                            </button>
+        @auth
+            @if ($onSelect)
+                <div id="filter" class="border-2 border-dashed p-4 rounded-xl space-y-4 bg-neutral-50">
+                    <div class="divide-y divide-dashed">
+                        {{-- menu pilih --}}
+                        <div class="py-2 space-y-2">
+                            <div class="font-bold">Pilih</div>
+                            <div class="">
+                                <button wire:click='selectAll'
+                                    class="p-1 hover:bg-highlighter rounded-md inline-flex items-center gap-1">
+                                    <i data-lucide='check-check' class="size-5"></i>
+                                    <span class="">Semua</span>
+                                </button>
+                                <button wire:click="unselect"
+                                    class="p-1 hover:bg-highlighter rounded-md inline-flex items-center gap-1">
+                                    <i data-lucide='square-dashed' class="size-5"></i>
+                                    <span class="">Batalkan</span>
+                                </button>
+                                <button wire:click="selectInverse"
+                                    class="p-1 hover:bg-highlighter rounded-md inline-flex items-center gap-1">
+                                    <i data-lucide='refresh-ccw' class="size-5"></i>
+                                    <span class="text-nowrap">Balik pilihan</span>
+                                </button>
+                            </div>
                         </div>
-                    </div>
 
-                    {{-- aksi --}}
-                    <div class="py-2 space-y-2">
-                        <div class="font-bold">Aksi</div>
-                        <div class="">
-                            <a href="/edit?{{ http_build_query(['products' => $selected]) }}"
-                                class="p-1 inline-flex hover:bg-highlighter rounded-md items-center gap-1">
-                                <i data-lucide='Pencil' class="size-5"></i>
-                                <span class="">Edit</span>
-                            </a>
-                            <button wire:click='deleteSelected'
-                                class="p-1 inline-flex hover:bg-highlighter rounded-md items-center gap-1">
-                                <i data-lucide='trash' class="size-5"></i>
-                                <span class="">Hapus</span>
-                            </button>
-                            <button wire:click='setAvailable'
-                                class="p-1 inline-flex hover:bg-highlighter rounded-md items-center gap-1">
-                                <i data-lucide='eye' class="size-5"></i>
-                                <span class="">Tersedia</span>
-                            </button>
-                            <button wire:click='setUnavailable'
-                                class="p-1 inline-flex hover:bg-highlighter rounded-md items-center gap-1">
-                                <i data-lucide='eye-off' class="size-5"></i>
-                                <span class="">Tidak tersedia</span>
-                            </button>
+                        {{-- aksi --}}
+                        <div class="py-2 space-y-2">
+                            <div class="font-bold">Aksi</div>
+                            <div class="">
+                                <a href="/edit?{{ http_build_query(['products' => $selected]) }}"
+                                    class="p-1 inline-flex hover:bg-highlighter rounded-md items-center gap-1">
+                                    <i data-lucide='Pencil' class="size-5"></i>
+                                    <span class="">Edit</span>
+                                </a>
+                                <button wire:click='deleteSelected'
+                                    class="p-1 inline-flex hover:bg-highlighter rounded-md items-center gap-1">
+                                    <i data-lucide='trash' class="size-5"></i>
+                                    <span class="">Hapus</span>
+                                </button>
+                                <button wire:click='setAvailable'
+                                    class="p-1 inline-flex hover:bg-highlighter rounded-md items-center gap-1">
+                                    <i data-lucide='eye' class="size-5"></i>
+                                    <span class="">Tersedia</span>
+                                </button>
+                                <button wire:click='setUnavailable'
+                                    class="p-1 inline-flex hover:bg-highlighter rounded-md items-center gap-1">
+                                    <i data-lucide='eye-off' class="size-5"></i>
+                                    <span class="">Tidak tersedia</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-                {{-- tombol --}}
-                <div class="flex justify-between items-center">
-                    <div class="text-sm">
-                        Dipilih <span class="font-bold">{{ count($selected) }}</span>
+                    {{-- tombol --}}
+                    <div class="flex justify-between items-center">
+                        <div class="text-sm">
+                            Dipilih <span class="font-bold">{{ count($selected) }}</span>
+                        </div>
+                        {{-- toggle tutup filter --}}
+                        <button type="button" wire:click='closeSelect'
+                            class="hover:bg-highlighter hover:rounded-4xl border-2 border-dashed border-neutral-800 p-2 rounded-xl flex items-center gap-2 group transition-all ease-in-out w-fit">
+                            <div class="group-hover:block hidden">Tutup</div>
+                            <i data-lucide='chevron-down' class="size-5"></i>
+                        </button>
                     </div>
-                    {{-- toggle tutup filter --}}
-                    <button type="button" wire:click='closeSelect'
-                        class="hover:bg-highlighter hover:rounded-4xl border-2 border-dashed border-neutral-800 p-2 rounded-xl flex items-center gap-2 group transition-all ease-in-out w-fit">
-                        <div class="group-hover:block hidden">Tutup</div>
-                        <i data-lucide='chevron-down' class="size-5"></i>
-                    </button>
                 </div>
-            </div>
-        @else
-            <button wire:click='$toggle("onSelect")'
-                class="hover:bg-highlighter {{ $onSelect ? 'bg-highlighter' : 'bg-neutral-50' }} hover:rounded-4xl border-2 border-dashed border-neutral-800 p-4 rounded-xl flex items-center gap-2 group transition-all ease-in-out w-fit">
-                @if ($onSelect)
-                    <div class="group-hover:block hidden">Tutup pilih</div>
-                    <i data-lucide='x' class="size-5"></i>
-                @else
-                    <div class="group-hover:block hidden">Pilih</div>
-                    <i data-lucide='square-check' class="size-5"></i>
-                @endif
-            </button>
-        @endif
+            @else
+                <button wire:click='$toggle("onSelect")'
+                    class="hover:bg-highlighter {{ $onSelect ? 'bg-highlighter' : 'bg-neutral-50' }} hover:rounded-4xl border-2 border-dashed border-neutral-800 p-4 rounded-xl flex items-center gap-2 group transition-all ease-in-out w-fit">
+                    @if ($onSelect)
+                        <div class="group-hover:block hidden">Tutup pilih</div>
+                        <i data-lucide='x' class="size-5"></i>
+                    @else
+                        <div class="group-hover:block hidden">Pilih</div>
+                        <i data-lucide='square-check' class="size-5"></i>
+                    @endif
+                </button>
+            @endif
+        @endauth
         {{-- tambah --}}
-        @if ($onSelect !== true)
+        @if (auth()->user() && $onSelect !== true)
             <a href="/new?{{ http_build_query([
                 'type' => ucfirst($type),
                 'provider' => ucfirst($provider),

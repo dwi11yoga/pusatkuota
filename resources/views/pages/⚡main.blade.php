@@ -58,8 +58,8 @@ new class extends Component {
         <x-list-header title="Admin corner" />
         {{-- list --}}
         <div class="divide-y divide-dashed">
-            <x-menu text="Tambah produk" url="/new" />
             @auth
+                <x-menu text="Tambah produk" url="/new" />
                 {{-- logout --}}
                 <button wire:click='logout' class="w-full" id="logout">
                     <x-menu text="Keluar sebagai admin" url="#logout" />

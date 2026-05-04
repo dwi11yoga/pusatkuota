@@ -4,11 +4,18 @@ use Livewire\Component;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Validate;
 use Livewire\Attributes\Url;
+use Livewire\Attributes\On;
 use Livewire\WithPagination;
 use App\Models\Product;
+use Carbon\Carbon;
 
 new class extends Component {
     use WithPagination;
+    // title
+    public function render()
+    {
+        return $this->view()->title('Daftar ' . ucfirst($this->type) . ' Murah ' . ucfirst($this->provider));
+    }
     //
     public $type, $provider;
 
@@ -52,7 +59,6 @@ new class extends Component {
     public $filterOpen = false;
 
     // dapatkan data produk
-    // public $products;
     #[Computed]
     public function products()
     {
@@ -114,6 +120,18 @@ new class extends Component {
         return $data;
     }
 
+    #[Computed]
+    public function latestData()
+    {
+        return $this->products->sortByDesc('updated_at')->first()->updated_at;
+    }
+
+    // fungsi tutup filter
+    public function filterToggle()
+    {
+        $this->filterOpen = !$this->filterOpen;
+    }
+
     // reset filter
     public function resetFilter()
     {
@@ -153,7 +171,6 @@ new class extends Component {
                 $unselected[] = $product->id;
             }
         }
-        // dd($selected, $unselected);
         $this->selected = $unselected;
     }
     public function closeSelect()
@@ -174,16 +191,22 @@ new class extends Component {
     }
 
     // hapus data yang dipilih
-    public function deleteSelected()
+    public $deleteSelected = false;
+    #[On('onDeletedProducts')]
+    public function onDeletedProducts()
     {
-        Product::whereIn('id', $this->selected)->delete();
+        $selectedTotal = count($this->selected);
+        $this->deleteSelected = false;
         $this->selected = [];
+        return redirect()
+            ->to('/' . $this->type . '/' . $this->provider)
+            ->with('success', $selectedTotal . ' products has been deleted.');
     }
 };
 ?>
 
 <div>
-    <livewire:header title="{{ $type . ' ' . $provider }}" />
+    <x-header title="{{ $type . ' ' . $provider }}" />
     {{-- daftar produk --}}
     <div class="divide-y divide-dashed">
         @if ($this->products->isEmpty())
@@ -207,19 +230,24 @@ new class extends Component {
                                 : 'Tidak tersedia';
                     @endphp
                     <x-list-item wire:key='{{ $product->id }}' id="{{ $product->id }}" text="{{ $product->name }}"
-                        :textRight="$textRight" :onSelect="$onSelect" checkboxModel="selected" />
+                        :textRight="$textRight" :onSelect="$onSelect" checkboxModel="selected" type="{{ $type }}" />
                 </div>
             @endforeach
-            <div class="text-sm py-3">Pembelian/paket internet lainnya bisa langsung hubungi admin 🤙.</div>
+            {{-- footnote --}}
+            <div class="text-sm py-3">
+                <div class="">Pembelian/paket internet lainnya bisa langsung hubungi admin 🤙.</div>
+                <div class="">Data diperbarui pada
+                    {{ Carbon::create($this->latestData)->locale('id')->translatedFormat('j F Y') }}.</div>
+            </div>
         @endif
     </div>
 
     {{-- aksi --}}
-    <div class="fixed bottom-5 right-5 text-base space-y-2 flex flex-col items-end max-w-80">
+    <div class="fixed bottom-5 right-5 text-base space-y-3 flex flex-col items-end max-w-80">
         {{-- filter --}}
         @if ($onSelect != true)
             @if ($filterOpen)
-                <div id="filter" class="border-2 border-dashed p-4 rounded-xl space-y-2 bg-neutral-50">
+                <x-panel closeFunction="filterToggle" resetFunction="resetFilter">
                     <div class="space-y-4 max-h-96 overflow-auto">
                         {{-- Mode tampilan --}}
                         @auth
@@ -318,41 +346,20 @@ new class extends Component {
                             </div>
                         </div>
                     </div>
-                    {{-- tombol --}}
-                    <div class="flex justify-end">
-                        <div class="flex gap-1">
-                            {{-- toggle reset filter --}}
-                            <button type="button" wire:click='resetFilter'
-                                class="hover:bg-highlighter hover:rounded-4xl border-2 border-dashed border-neutral-800 p-2 rounded-xl flex items-center gap-2 group transition-all ease-in-out w-fit">
-                                <div class="group-hover:block hidden">Reset</div>
-                                <i data-lucide='refresh-ccw' class="size-5"></i>
-                            </button>
-                            {{-- toggle tutup filter --}}
-                            <button type="button" wire:click='$toggle("filterOpen")' {{-- onclick="toggleClass('filter', 'hidden'); toggleClass('filterToggle', 'hidden')" --}}
-                                class="hover:bg-highlighter hover:rounded-4xl border-2 border-dashed border-neutral-800 p-2 rounded-xl flex items-center gap-2 group transition-all ease-in-out w-fit">
-                                <div class="group-hover:block hidden">Tutup</div>
-                                <i data-lucide='chevron-down' class="size-5"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                </x-panel>
             @else
                 {{-- toggle filter --}}
-                <button id="filterToggle" wire:click='$toggle("filterOpen")'
-                    class="hover:bg-highlighter bg-neutral-50 hover:rounded-4xl border-2 border-dashed border-neutral-800 p-4 rounded-xl flex items-center gap-2 group transition-all ease-in-out w-fit">
-                    <div class="group-hover:block hidden">Filter</div>
-                    <i data-lucide='funnel' class="size-5"></i>
-                </button>
+                <x-button id="filterToggle" function="filterToggle" text="Filter" icon="funnel" />
             @endif
         @endif
         {{-- tombol pilih --}}
         @auth
             @if ($onSelect)
-                <div id="filter" class="border-2 border-dashed p-4 rounded-xl space-y-4 bg-neutral-50">
+                <x-panel closeFunction="closeSelect">
                     <div class="divide-y divide-dashed">
                         {{-- menu pilih --}}
                         <div class="py-2 space-y-2">
-                            <div class="font-bold">Pilih</div>
+                            <div class="font-bold">Pilih ({{ count($selected) }})</div>
                             <div class="">
                                 <button wire:click='selectAll'
                                     class="p-1 hover:bg-highlighter rounded-md inline-flex items-center gap-1">
@@ -381,7 +388,7 @@ new class extends Component {
                                     <i data-lucide='Pencil' class="size-5"></i>
                                     <span class="">Edit</span>
                                 </a>
-                                <button wire:click='deleteSelected'
+                                <button wire:click='$set("deleteSelected", true)'
                                     class="p-1 inline-flex hover:bg-highlighter rounded-md items-center gap-1">
                                     <i data-lucide='trash' class="size-5"></i>
                                     <span class="">Hapus</span>
@@ -399,43 +406,24 @@ new class extends Component {
                             </div>
                         </div>
                     </div>
-                    {{-- tombol --}}
-                    <div class="flex justify-between items-center">
-                        <div class="text-sm">
-                            Dipilih <span class="font-bold">{{ count($selected) }}</span>
-                        </div>
-                        {{-- toggle tutup filter --}}
-                        <button type="button" wire:click='closeSelect'
-                            class="hover:bg-highlighter hover:rounded-4xl border-2 border-dashed border-neutral-800 p-2 rounded-xl flex items-center gap-2 group transition-all ease-in-out w-fit">
-                            <div class="group-hover:block hidden">Tutup</div>
-                            <i data-lucide='chevron-down' class="size-5"></i>
-                        </button>
-                    </div>
-                </div>
+                </x-panel>
             @else
-                <button wire:click='$toggle("onSelect")'
-                    class="hover:bg-highlighter {{ $onSelect ? 'bg-highlighter' : 'bg-neutral-50' }} hover:rounded-4xl border-2 border-dashed border-neutral-800 p-4 rounded-xl flex items-center gap-2 group transition-all ease-in-out w-fit">
-                    @if ($onSelect)
-                        <div class="group-hover:block hidden">Tutup pilih</div>
-                        <i data-lucide='x' class="size-5"></i>
-                    @else
-                        <div class="group-hover:block hidden">Pilih</div>
-                        <i data-lucide='square-check' class="size-5"></i>
-                    @endif
-                </button>
+                <x-button id="selectToggle" function="$toggle('onSelect')" text="Pilih" icon="square-check" />
             @endif
         @endauth
         {{-- tambah --}}
         @if (auth()->user() && $onSelect !== true)
-            <a href="/new?{{ http_build_query([
-                'type' => ucfirst($type),
-                'provider' => ucfirst($provider),
-                'category' => ucfirst($category),
-            ]) }}"
-                class="hover:bg-highlighter bg-neutral-50 hover:rounded-4xl border-2 border-dashed border-neutral-800 p-4 rounded-xl flex items-center gap-2 group transition-all ease-in-out w-fit">
-                <div class="group-hover:block hidden">Tambah</div>
-                <i data-lucide='plus' class="size-5"></i>
-            </a>
+            <x-button id="addProduct" text="Tambah" icon="plus" color="dark" type="link"
+                url="/new?{{ http_build_query([
+                    'type' => ucfirst($type),
+                    'provider' => ucfirst($provider),
+                    'category' => ucfirst($category),
+                ]) }}" />
         @endif
     </div>
+
+    {{-- popup konfirmasi hapus --}}
+    @if ($deleteSelected)
+        <livewire:delete-products :products="$this->products" :selected="$selected" />
+    @endif
 </div>

@@ -6,17 +6,16 @@ use Livewire\Attributes\Computed;
 use App\Models\Product;
 
 new class extends Component {
-    #[Layout('layouts/app')]
-    #[Computed]
-    public function pulsaList()
+    public $data;
+    public function mount()
     {
-        return Product::distinct('provider')->where('type', 'Pulsa')->pluck('provider');
-    }
-
-    #[Computed]
-    public function kuotaList()
-    {
-        return Product::distinct('provider')->where('type', 'Kuota')->pluck('provider');
+        // dapatkan daftar type produk
+        $types = Product::distinct('type')->pluck('type');
+        foreach ($types as $type) {
+            $data[$type] = Product::where('type', $type)->distinct('provider')->pluck('provider');
+        }
+        $this->data = $data;
+        // dd($data);
     }
 
     // fungsi logout
@@ -24,34 +23,24 @@ new class extends Component {
     {
         Auth::logout();
         session()->regenerate();
-        return redirect()->to('/')->with('success', 'Anda berhasil logout');
+        return redirect()->to('/')->with('success', 'You have been logged out. See you next time!');
     }
 };
 ?>
 
 <div class="space-y-5">
     <x-header title="PUSAT KUOTA" :underline="false" />
-    {{-- pulsa --}}
-    <div class="">
-        <x-list-header title="Pulsa" />
-        {{-- list --}}
-        <div class="divide-y divide-dashed">
-            @foreach ($this->pulsaList as $pulsa)
-                <x-menu text="{{ $pulsa }}" url="/pulsa/{{ strtolower($pulsa) }}" />
-            @endforeach
+    @foreach ($data as $type => $providers)
+        <div class="">
+            <x-list-header title="{{ $type }}" />
+            {{-- list --}}
+            <div class="divide-y divide-dashed">
+                @foreach ($providers as $provider)
+                    <x-menu text="{{ $provider }}" url="/{{ strtolower($type) }}/{{ strtolower($provider) }}" />
+                @endforeach
+            </div>
         </div>
-    </div>
-    {{-- kuota --}}
-    <div class="">
-        {{-- judul --}}
-        <x-list-header title="Kuota" />
-        {{-- list --}}
-        <div class="divide-y divide-dashed">
-            @foreach ($this->kuotaList as $kuota)
-                <x-menu :text="$kuota" url="/kuota/{{ strtolower($kuota) }}" />
-            @endforeach
-        </div>
-    </div>
+    @endforeach
     {{-- Admin corner --}}
     <div class="">
         {{-- judul --}}
@@ -70,15 +59,4 @@ new class extends Component {
             @endauth
         </div>
     </div>
-
-    {{-- tampilkan info session --}}
-    @session('success')
-        <div id="sessionSuccess" class="fixed bottom-0 right-5 bg-highlighter p-3 rounded-l-2xl rounded-t-2xl">
-            {{ session('success') }}
-        </div>
-        {{-- hilangkan pesan sukses setelah 3 detik --}}
-        <script>
-            setTimeout(() => document.getElementById('sessionSuccess').remove(), 3000);
-        </script>
-    @endsession
 </div>

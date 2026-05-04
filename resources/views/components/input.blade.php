@@ -8,6 +8,7 @@
     'readonly' => false,
     'dataset' => null,
     'calculatePriceMethod' => null,
+    'autofocus' => false,
 ])
 
 <div class="w-full">
@@ -28,6 +29,7 @@
     @else
         <input wire:model.live.blur='{{ $model }}' placeholder="{{ $placeholder ?? 'Ketik...' }}"
             list="{{ $dataset }}" id="{{ $id }}" type="{{ $type }}"
+            @if ($autofocus) autofocus @endif
             @if ($readonly) readonly @endif
             @if ($calculatePriceMethod) wire:change='{{ $calculatePriceMethod }}' @endif
             class="h-fit w-full outline-none focus:border-b-2 {{ $error ? 'border-red-500' : '' }}">

@@ -2,11 +2,12 @@
 
 use Livewire\Component;
 use Livewire\Attributes\Url;
-use Livewire\Attributes\Computed;
 use Livewire\Attributes\Validate;
+use Livewire\Attributes\Title;
 use App\Models\Product;
 
 new class extends Component {
+    #[Title('Edit Produk')]
     #[Url]
     public $products; // id produk yang diedit
 
@@ -76,6 +77,11 @@ new class extends Component {
     {
         $this->validateOnly('profits.*');
     }
+    // reset saved jika ada input yang diisi
+    public function updated()
+    {
+        $this->saved = null;
+    }
 
     // hitung berapa harga jual
     // #[Computed]
@@ -137,7 +143,7 @@ new class extends Component {
 
 <div>
     @if (empty($products))
-        <x-error-page code="400" title="No Products Selected" message="Please select at least one product to edit." />
+        <x-error-page code="400" title="Tidak ada produk yang dipilih" message="Tolong setidaknya pilih satu produk untuk diedit." />
     @else
         <x-header title="Edit Produk" />
         <form wire:submit='save'>
@@ -154,8 +160,6 @@ new class extends Component {
                 </div>
                 {{-- provider --}}
                 <div class="py-2">
-                    {{-- <livewire:input id="provider" model="provider" type="text" label="Provider" dataset="provider-list"
-                        :error="$errors->first('provider')" /> --}}
                     <x-input id="provider" model="provider" type="text" label="Provider" dataset="provider-list"
                         :error="$errors->first('provider')" />
                     <datalist id="provider-list">
@@ -221,25 +225,27 @@ new class extends Component {
                     @endfor
                 </div>
             </div>
-            {{-- simpan --}}
             <div class="fixed bottom-5 right-5 flex justify-center text-base gap-2">
-                <button
-                    class="flex gap-2 items-center rounded-full border-2 bg-neutral-50 border-neutral-500 hover:bg-highlighter border-dashed px-5 py-3 cursor-pointer transition-all ease-in-out">
-                    @if ($saved === true)
-                        <i wire:loading.remove wire:target='save' data-lucide='check' class="size-5"></i>
-                        <div wire:loading.remove wire:target='save' class="">Data berhasil disimpan</div>
-                    @elseif ($saved === false)
-                        <i wire:loading.remove wire:target='save' data-lucide='x' class="size-5"></i>
-                        <div wire:loading.remove wire:target='save' class="">Gagal menyimpan data, coba lagi</div>
-                    @else
-                        <i wire:loading.remove wire:target='save' data-lucide='save' class="size-5"></i>
-                        <div wire:loading.remove wire:target='save' class="">Simpan</div>
-                    @endif
-                    <div wire:loading wire:target='save' class="animate-spin">
-                        <i data-lucide='loader' class="size-5"></i>
-                    </div>
-                    <div wire:loading wire:target='save' class="">Menyimpan...</div>
-                </button>
+                {{-- simpan --}}
+                @if ($saved == true)
+                    <x-button id="successButton" type="link" text="Perubahan berhasil disimpan, lihat" icon="check"
+                        url="/{{ strtolower($type) }}/{{ strtolower($provider) }}" color="dark" :hideText="false" />
+                @else
+                    <x-button id="saveButton" type="submit" color="dark">
+                        @if ($saved === false)
+                            <i wire:loading.remove wire:target='save' data-lucide='x' class="size-5"></i>
+                            <div wire:loading.remove wire:target='save' class="">Gagal menyimpan data, coba lagi
+                            </div>
+                        @else
+                            <i wire:loading.remove wire:target='save' data-lucide='save' class="size-5"></i>
+                            <div wire:loading.remove wire:target='save' class="">Simpan</div>
+                        @endif
+                        <div wire:loading wire:target='save' class="animate-spin">
+                            <i data-lucide='loader' class="size-5"></i>
+                        </div>
+                        <div wire:loading wire:target='save' class="">Menyimpan...</div>
+                    </x-button>
+                @endif
             </div>
         </form>
     @endif

@@ -4,10 +4,12 @@ use Livewire\Component;
 use Livewire\Attributes\Validate;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
+use Livewire\Attributes\Title;
 use App\Models\Product;
 
 new class extends Component {
     // jumlah input
+    #[Title('Tambah Produk baru')]
     public $inputCount = 1;
 
     // input global
@@ -61,6 +63,12 @@ new class extends Component {
         $this->validateOnly('profits.*');
     }
 
+    // reset saved jika ada input yang diisi
+    public function updated()
+    {
+        $this->saved = null;
+    }
+
     // hitung berapa harga jual
     public function calculatePrice($key)
     {
@@ -107,7 +115,6 @@ new class extends Component {
     public $saved;
     public function save()
     {
-        sleep(2);
         try {
             $this->validate();
 
@@ -138,6 +145,14 @@ new class extends Component {
             throw $err;
         }
     }
+
+    // fungsi reset form
+    public function resetForm()
+    {
+        $this->type = $this->category = $this->provider = $this->url = null;
+        $this->names = $this->costs = $this->profits = $this->prices = [];
+        $this->inputCount = 1;
+    }
 };
 ?>
 
@@ -158,8 +173,6 @@ new class extends Component {
             </div>
             {{-- provider --}}
             <div class="py-2">
-                {{-- <livewire:input id="provider" model="provider" type="text" label="Provider" dataset="provider-list"
-                    :error="$errors->first('provider')" /> --}}
                 <x-input id="provider" model="provider" type="text" label="Provider" dataset="provider-list"
                     :error="$errors->first('provider')" />
                 <datalist id="provider-list">
@@ -226,29 +239,29 @@ new class extends Component {
         </div>
         {{-- tambah input + simpan --}}
         <div class="fixed bottom-5 right-5 flex justify-center text-base gap-2">
-            <button type="button" wire:click='inputIncrement'
-                class="flex gap-2 items-center rounded-full border-2 bg-neutral-50 border-neutral-500 hover:bg-highlighter border-dashed px-5 py-3 cursor-pointer transition-all ease-in-out group">
-                <i data-lucide='plus' class="size-5"></i>
-                <div class="hidden group-hover:block">Tambah input</div>
-            </button>
+            {{-- tombol reset form --}}
+            <x-button id="resetForm" type="button" text="Reset" icon="refresh-ccw" function="resetForm" />
+            {{-- tambah input produk --}}
+            <x-button id="addInput" type="button" text="Tambah input" icon="plus" function="inputIncrement" />
             {{-- simpan --}}
-            <button
-                class="flex gap-2 items-center rounded-full border-2 bg-neutral-50 border-neutral-500 hover:bg-highlighter border-dashed px-5 py-3 cursor-pointer transition-all ease-in-out">
-                @if ($saved === true)
-                    <i wire:loading.remove wire:target='save' data-lucide='check' class="size-5"></i>
-                    <div wire:loading.remove wire:target='save' class="">Data berhasil disimpan</div>
-                @elseif ($saved === false)
-                    <i wire:loading.remove wire:target='save' data-lucide='x' class="size-5"></i>
-                    <div wire:loading.remove wire:target='save' class="">Gagal menyimpan data, coba lagi</div>
-                @else
-                    <i wire:loading.remove wire:target='save' data-lucide='save' class="size-5"></i>
-                    <div wire:loading.remove wire:target='save' class="">Simpan</div>
-                @endif
-                <div wire:loading wire:target='save' class="animate-spin">
-                    <i data-lucide='loader' class="size-5"></i>
-                </div>
-                <div wire:loading wire:target='save' class="">Menyimpan...</div>
-            </button>
+            @if ($saved == true)
+                <x-button id="save" type="link" url="/{{ strtolower($type) }}/{{ strtolower($provider) }}"
+                    :hideText="false" color="dark" text="Data berhasil disimpan, lihat" icon="check" />
+            @else
+                <x-button id="save" type="submit" :hideText="false" color="dark">
+                    @if ($saved === false)
+                        <div wire:loading.remove wire:target='save' class="">Gagal menyimpan data, coba lagi</div>
+                        <i wire:loading.remove wire:target='save' data-lucide='x' class="size-5"></i>
+                    @else
+                        <div wire:loading.remove wire:target='save' class="">Simpan</div>
+                        <i wire:loading.remove wire:target='save' data-lucide='save' class="size-5"></i>
+                    @endif
+                    <div wire:loading wire:target='save' class="">Menyimpan...</div>
+                    <div wire:loading wire:target='save' class="animate-spin">
+                        <i data-lucide='loader' class="size-5"></i>
+                    </div>
+                </x-button>
+            @endif
         </div>
     </form>
 </div>

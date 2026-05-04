@@ -1,4 +1,4 @@
-# 📱 JualKuota — Pulsa & Data Store
+# 📱 PusatKuota — Pulsa & Data Store
 
 > Aplikasi web jual beli pulsa dan kuota internet yang dibangun dengan Laravel Livewire dan Tailwind CSS.
 >

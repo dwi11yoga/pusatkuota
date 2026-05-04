@@ -1,58 +1,69 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 📱 JualKuota — Pulsa & Data Store
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+> Aplikasi web jual beli pulsa dan kuota internet yang dibangun dengan Laravel Livewire dan Tailwind CSS.
+>
+> A web-based mobile credit and internet data store built with Laravel Livewire and Tailwind CSS.
 
-## About Laravel
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 🇮🇩 Deskripsi
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+**JualKuota** adalah aplikasi web yang memudahkan pengelolaan dan pembelian pulsa serta kuota internet. Dirancang untuk dua tipe pengguna — **pengunjung** yang dapat melihat dan memesan produk, serta **admin** yang mengelola seluruh data produk secara efisien.
 
-## Learning Laravel
+Aplikasi ini menonjolkan fitur **mass action** — admin dapat menambah, mengedit, dan menghapus banyak produk sekaligus tanpa perlu membuka satu per satu, sehingga pengelolaan produk menjadi jauh lebih cepat dan efisien.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## 🇬🇧 Description
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+**JualKuota** is a web application that simplifies the management and purchase of mobile credit and internet data packages. Designed for two types of users — **visitors** who can browse and order products, and **admins** who manage all product data efficiently.
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+The application highlights a **mass action** feature — admins can add, edit, and delete multiple products at once without opening them one by one, making product management significantly faster and more efficient.
 
-## Agentic Development
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
 
-```bash
-composer require laravel/boost --dev
+## ✨ Fitur Unggulan / Key Features
 
-php artisan boost:install
-```
+### 🇮🇩
+- **Mass Tambah Produk** — Tambahkan banyak produk sekaligus dalam satu form
+- **Mass Edit** — Edit beberapa produk sekaligus, termasuk nama, modal, keuntungan, dan harga jual
+- **Mass Hapus** — Hapus beberapa produk sekaligus dengan konfirmasi keamanan
+- **Filter & Sortir** — Filter produk berdasarkan tipe, provider, kategori, dan rentang harga
+- **Kalkulasi Otomatis** — Harga jual dihitung otomatis dari modal + keuntungan
+- **Ketersediaan Produk** — Admin dapat menandai produk sebagai tersedia atau tidak tersedia
+- **Tampilan Dinamis** — Mode tampilan berbeda untuk pengunjung dan admin
+- **Paginasi** — Navigasi produk dengan pagination yang efisien
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+### 🇬🇧
+- **Mass Add Products** — Add multiple products at once in a single form
+- **Mass Edit** — Edit multiple products simultaneously, including name, cost, profit, and selling price
+- **Mass Delete** — Delete multiple products at once with a safety confirmation dialog
+- **Filter & Sort** — Filter products by type, provider, category, and price range
+- **Auto Calculation** — Selling price is automatically calculated from cost + profit
+- **Product Availability** — Admin can mark products as available or unavailable
+- **Dynamic View** — Different display modes for visitors and admins
+- **Pagination** — Efficient product navigation with pagination
 
-## Contributing
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
 
-## Code of Conduct
+## 👤 Tipe Pengguna / User Roles
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+| Fitur / Feature | Pengunjung / Visitor | Admin |
+|---|:---:|:---:|
+| Lihat produk / View products | ✅ | ✅ |
+| Filter & sort produk | ✅ | ✅ |
+| Tambah produk / Add products | ❌ | ✅ |
+| Edit produk / Edit products | ❌ | ✅ |
+| Hapus produk / Delete products | ❌ | ✅ |
+| Mass action | ❌ | ✅ |
+| Kelola ketersediaan / Manage availability | ❌ | ✅ |
 
-## Security Vulnerabilities
+---
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## 🛠️ Tech Stack
 
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+| Layer | Technology |
+|---|---|
+| Backend | [Laravel](https://laravel.com) |
+| Frontend | [Laravel Livewire v4](https://livewire.laravel.com) |
+| Styling | [Tailwind CSS](https://tailwindcss.com) |
+| Icons | [Lucide Icons](https://lucide.dev) |
+| Database | MySQL / MariaDB |
